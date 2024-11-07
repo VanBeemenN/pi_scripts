@@ -1,0 +1,44 @@
+name: Trigger auto deployment for nvbcontainerapp
+
+# When this action will be executed
+on:
+  # Automatically trigger it when detected changes in repo
+  push:
+    branches: 
+      [ master ]
+    paths:
+    - '**'
+    - '.github/workflows/nvbcontainerapp-AutoDeployTrigger-dd7a7590-9e4a-401b-8a9f-0eb5059fa2d3.yml'
+
+  # Allow manual trigger 
+  workflow_dispatch:
+      
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout to the branch
+        uses: actions/checkout@v2
+
+      - name: Azure Login
+        uses: azure/login@v1
+        with:
+          creds: ${{ secrets.NVBCONTAINERAPP_AZURE_CREDENTIALS }}
+
+      - name: Build and push container image to registry
+        uses: azure/container-apps-deploy-action@v2
+        with:
+          appSourcePath: ${{ github.workspace }}
+          _dockerfilePathKey_: _dockerfilePath_
+          registryUrl: nvbacr.azurecr.io
+          registryUsername: ${{ secrets.NVBCONTAINERAPP_REGISTRY_USERNAME }}
+          registryPassword: ${{ secrets.NVBCONTAINERAPP_REGISTRY_PASSWORD }}
+          containerAppName: nvbcontainerapp
+          resourceGroup: nvbresource-group
+          imageToBuild: nvbacr.azurecr.io/nvbcontainerapp:${{ github.sha }}
+          
+            
+
+     
+
